@@ -209,7 +209,8 @@ export default {
     let map = null;
     let tileLayer = null;
     let isothermLayer = null;
-    
+    let clickMarker = null;
+
     const activeLayer = ref('temp');
     const mapInitialized = ref(false);
     const tempUnit = ref('C');
@@ -281,6 +282,9 @@ export default {
           language: 'en'
         }).addTo(map);
         
+        // Add click handler
+        map.on('click', handleMapClick);
+
         // Add initial weather layer
         addWeatherLayer(activeLayer.value);
         
@@ -408,6 +412,47 @@ export default {
       }
     });
     
+    const handleMapClick = (e) => {
+      if (!map) return;
+      const { lat, lng } = e.latlng;
+
+      import('leaflet').then((L) => {
+        // Remove previous click marker
+        if (clickMarker) map.removeLayer(clickMarker);
+
+        clickMarker = L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup('<div style="text-align:center;padding:4px 8px">⏳ Loading weather...</div>')
+          .openPopup();
+
+        store.dispatch('fetchWeatherByCoords', { lat, lon: lng });
+      });
+    };
+
+    // Watch weather changes to update the click marker popup
+    watch(() => store.state.weather, (weather) => {
+      if (!clickMarker || !weather) return;
+      const loc = store.state.selectedLocation;
+      const temp = weather.main?.temp;
+      const desc = weather.weather?.[0]?.description;
+      const humidity = weather.main?.humidity;
+      const wind = weather.wind?.speed;
+      const name = loc?.display || weather.name || 'Unknown';
+
+      clickMarker.setPopupContent(`
+        <div style="min-width:160px;font-family:sans-serif">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px">📍 ${name}</div>
+          <div style="font-size:1.3rem;font-weight:800;color:#6366f1">${Math.round(temp)}°C</div>
+          <div style="font-size:0.8rem;text-transform:capitalize;color:#555;margin-bottom:6px">${desc}</div>
+          <div style="font-size:0.75rem;color:#666;display:flex;gap:10px">
+            <span>💧 ${humidity}%</span>
+            <span>💨 ${wind} m/s</span>
+          </div>
+        </div>
+      `);
+      clickMarker.openPopup();
+    });
+
     onMounted(() => {
       // Initialize map after component is mounted
       initMap();
@@ -602,6 +647,7 @@ export default {
   width: 100%;
   z-index: 1;
   position: relative;
+  cursor: crosshair;
 }
 
 .map-container::after {
