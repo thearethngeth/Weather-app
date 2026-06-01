@@ -245,7 +245,8 @@ export default {
         },
         (error) => {
           this.$store.commit("SET_ERROR", "Unable to retrieve your location");
-        }
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
       );
     },
   },

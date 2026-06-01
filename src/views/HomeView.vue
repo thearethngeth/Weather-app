@@ -396,6 +396,7 @@ export default {
               lon: coords.longitude,
             }),
           () => store.dispatch("fetchWeatherByCity", "Phnom Penh"),
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
         );
       } else {
         store.dispatch("fetchWeatherByCity", "Phnom Penh");
