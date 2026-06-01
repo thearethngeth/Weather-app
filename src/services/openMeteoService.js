@@ -67,7 +67,7 @@ export function mapForecast(data) {
   const hourly = data.hourly;
   const list = [];
 
-  for (let i = 0; i < Math.min(hourly.time.length, 40); i++) {
+  for (let i = 0; i < Math.min(hourly.time.length, 168); i++) {
     const wInfo = getWeatherInfo(hourly.weather_code[i]);
     list.push({
       dt: new Date(hourly.time[i]).getTime() / 1000,

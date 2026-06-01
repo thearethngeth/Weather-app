@@ -147,7 +147,8 @@ export default createStore({
           // Build oneCallData from Open-Meteo daily data
           const dailyForecasts = {};
           forecast.list.forEach(item => {
-            const day = new Date(item.dt * 1000).toISOString().split('T')[0];
+            const d = new Date(item.dt * 1000);
+            const day = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
             if (!dailyForecasts[day]) dailyForecasts[day] = item;
           });
 

@@ -168,24 +168,21 @@
       </div>
     </main>
 
-    <nav class="bottom-nav" aria-label="Weather dashboard shortcuts">
-      <button class="bnav-btn" @click="scrollToSection('weather-map-section')">
+    <nav class="bottom-nav" aria-label="Weather dashboard navigation">
+      <button :class="['bnav-btn', { active: activeTab === 'home' }]" @click="setTab('home')">
+        <i class="fas fa-house"></i><span>Home</span>
+      </button>
+      <button :class="['bnav-btn', { active: activeTab === 'map' }]" @click="setTab('map')">
         <i class="fas fa-map-location-dot"></i><span>Map</span>
       </button>
-      <button
-        class="bnav-btn"
-        @click="scrollToSection('hourly-forecast-section')"
-      >
+      <button :class="['bnav-btn', { active: activeTab === 'forecast' }]" @click="setTab('forecast')">
+        <i class="fas fa-calendar-days"></i><span>Forecast</span>
+      </button>
+      <button :class="['bnav-btn', { active: activeTab === 'hourly' }]" @click="setTab('hourly')">
         <i class="fas fa-clock"></i><span>Hourly</span>
       </button>
-      <button
-        class="bnav-btn"
-        @click="scrollToSection('five-day-forecast-section')"
-      >
-        <i class="fas fa-calendar-days"></i><span>5-Day</span>
-      </button>
-      <button class="bnav-btn" @click="scrollToTop">
-        <i class="fas fa-arrow-up"></i><span>Top</span>
+      <button :class="['bnav-btn', { active: activeTab === 'ai' }]" @click="setTab('ai')">
+        <i class="fas fa-robot"></i><span>AI</span>
       </button>
     </nav>
 
@@ -387,6 +384,20 @@ export default {
         });
     };
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+    const activeTab = ref('home');
+    const setTab = (tab) => {
+      activeTab.value = tab;
+      if (tab === 'home') scrollToTop();
+      else if (tab === 'map') scrollToSection('weather-map-section');
+      else if (tab === 'forecast') scrollToSection('five-day-forecast-section');
+      else if (tab === 'hourly') scrollToSection('hourly-forecast-section');
+      else if (tab === 'ai') {
+        // Trigger the floating AI chat button click
+        const aiBtn = document.querySelector('.floating-chat-btn');
+        if (aiBtn) aiBtn.click();
+      }
+    };
     const getUserLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -438,6 +449,8 @@ export default {
       switchUnits,
       scrollToSection,
       scrollToTop,
+      activeTab,
+      setTab,
       summaryCards,
     };
   },
@@ -828,31 +841,52 @@ body.dark-theme .bottom-nav {
 }
 
 .bnav-btn {
-  min-width: 78px;
+  flex: 1;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 7px 14px;
+  padding: 7px 8px;
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   font: inherit;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+  position: relative;
 
   i {
-    font-size: 17px;
+    font-size: 18px;
   }
   span {
     font-size: 10px;
-    font-weight: 800;
+    font-weight: 700;
   }
 
   &:hover {
-    background: var(--accent-light);
     color: var(--accent-dark);
+    transform: translateY(-2px);
+  }
+
+  &.active {
+    color: #6366f1;
+
+    i {
+      transform: translateY(-2px);
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 3px;
+      border-radius: 2px 2px 0 0;
+      background: #6366f1;
+    }
   }
 }
 
