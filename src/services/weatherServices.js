@@ -67,22 +67,19 @@ export const weatherService = {  async getCoordinatesByCity(city) {
   },
   async getDetailedLocation(lat, lon) {
     try {
-      const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
-        params: { latlng: `${lat},${lon}`, key: GOOGLE_MAPS_API_KEY }
+      const response = await axios.get('https://nominatim.openstreetmap.org/reverse', {
+        params: { lat, lon, format: 'json', addressdetails: 1 },
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'ClimaSense/1.0' }
       });
-      if (!response.data.results || response.data.results.length === 0) return null;
 
-      const components = response.data.results[0].address_components;
-      const get = (types) => {
-        const c = components.find(c => types.some(t => c.types.includes(t)));
-        return c ? c.long_name : null;
-      };
+      if (!response.data || !response.data.address) return null;
 
-      const village   = get(['neighborhood', 'sublocality_level_2']);
-      const commune   = get(['sublocality_level_1', 'sublocality']);
-      const district  = get(['administrative_area_level_2']);
-      const city      = get(['locality', 'administrative_area_level_1']);
-      const country   = get(['country']);
+      const a = response.data.address;
+      const village  = a.village || a.neighbourhood || a.quarter || null;
+      const commune  = a.suburb || a.city_district || null;
+      const district = a.county || null;
+      const city     = a.city || a.town || a.state || null;
+      const country  = a.country || null;
 
       const parts = [village, commune, district, city, country].filter(Boolean);
       return parts.length > 0 ? parts.join(', ') : null;
