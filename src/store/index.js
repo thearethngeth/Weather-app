@@ -1,5 +1,6 @@
 import { createStore } from 'vuex'
 import { weatherService } from '@/services/weatherServices'
+import { fetchOpenMeteoWeather, mapCurrentWeather, mapForecast } from '@/services/openMeteoService'
 
 export default createStore({
   state: {
@@ -130,59 +131,43 @@ export default createStore({
         let success = false;
         
         try {
-          weather = await weatherService.getCurrentWeather(lat, lon, units);
+          // Use Open-Meteo for more accurate weather & forecast (ECMWF model)
+          const openMeteoData = await fetchOpenMeteoWeather(lat, lon);
+          const locationName = state.selectedLocation?.name || '';
+          const country = state.selectedLocation?.country || '';
+
+          weather = mapCurrentWeather(openMeteoData, locationName, country);
+          forecast = mapForecast(openMeteoData);
+
           commit('SET_WEATHER', weather);
-          console.log('Current weather data fetched successfully');
-          success = true;
-          
-          // Since we don't have One Call API access, extract UV Index here if available
-          if (weather && weather.main) {
-            // Create a simple one call replacement from standard data
-            const simpleOneCallData = {
-              current: weather,
-              daily: [], // Will be filled from forecast data 
-              hourly: [],
-            };
-            
-            commit('SET_ONE_CALL_DATA', simpleOneCallData);
-          }
-        } catch (err) {
-          console.error('Failed to fetch current weather:', err);
-        }
-        
-        try {
-          forecast = await weatherService.getForecast(lat, lon, units);
           commit('SET_FORECAST', forecast);
-          console.log('Forecast data fetched successfully');
+          console.log('Weather data fetched from Open-Meteo (ECMWF)');
           success = true;
-          
-          // Add forecast data to our simple one call replacement
-          if (forecast && forecast.list) {
-            // Get the one call data that might have been set above
-            const oneCallData = state.oneCallData || { 
-              current: weather || null,
-              daily: [],
-              hourly: []
-            };
-            
-            // Group forecast entries by day for daily forecast
-            const dailyForecasts = {};
-            forecast.list.forEach(item => {
-              const date = new Date(item.dt * 1000);
-              const day = date.toISOString().split('T')[0];
-              
-              if (!dailyForecasts[day]) {
-                dailyForecasts[day] = item;
-              }
-            });
-            
-            oneCallData.daily = Object.values(dailyForecasts);
-            oneCallData.hourly = forecast.list.slice(0, 24);
-            
-            commit('SET_ONE_CALL_DATA', oneCallData);
-          }
+
+          // Build oneCallData from Open-Meteo daily data
+          const dailyForecasts = {};
+          forecast.list.forEach(item => {
+            const day = new Date(item.dt * 1000).toISOString().split('T')[0];
+            if (!dailyForecasts[day]) dailyForecasts[day] = item;
+          });
+
+          commit('SET_ONE_CALL_DATA', {
+            current: weather,
+            daily: Object.values(dailyForecasts),
+            hourly: forecast.list.slice(0, 24),
+          });
         } catch (err) {
-          console.error('Failed to fetch forecast:', err);
+          console.error('Open-Meteo failed, falling back to OpenWeatherMap:', err);
+          // Fallback to OpenWeatherMap if Open-Meteo fails
+          try {
+            weather = await weatherService.getCurrentWeather(lat, lon, units);
+            commit('SET_WEATHER', weather);
+            forecast = await weatherService.getForecast(lat, lon, units);
+            commit('SET_FORECAST', forecast);
+            success = true;
+          } catch (fallbackErr) {
+            console.error('Fallback also failed:', fallbackErr);
+          }
         }
         
         try {
