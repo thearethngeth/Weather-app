@@ -8,6 +8,7 @@ console.log('Using Weather API Key:', API_KEY ? `${API_KEY.substring(0, 4)}...${
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0'; // Changed to HTTPS
 const ONE_CALL_URL = 'https://api.openweathermap.org/data/2.5/onecall'; // Using 2.5 version which is more widely available
+const GOOGLE_MAPS_API_KEY = process.env.VUE_APP_GOOGLE_MAPS_API_KEY;
 
 export const weatherService = {  async getCoordinatesByCity(city) {
     try {
@@ -62,6 +63,32 @@ export const weatherService = {  async getCoordinatesByCity(city) {
         country: `(${lat.toFixed(2)}, ${lon.toFixed(2)})`,
         state: null
       };
+    }
+  },
+  async getDetailedLocation(lat, lon) {
+    try {
+      const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+        params: { latlng: `${lat},${lon}`, key: GOOGLE_MAPS_API_KEY }
+      });
+      if (!response.data.results || response.data.results.length === 0) return null;
+
+      const components = response.data.results[0].address_components;
+      const get = (types) => {
+        const c = components.find(c => types.some(t => c.types.includes(t)));
+        return c ? c.long_name : null;
+      };
+
+      const village   = get(['neighborhood', 'sublocality_level_2']);
+      const commune   = get(['sublocality_level_1', 'sublocality']);
+      const district  = get(['administrative_area_level_2']);
+      const city      = get(['locality', 'administrative_area_level_1']);
+      const country   = get(['country']);
+
+      const parts = [village, commune, district, city, country].filter(Boolean);
+      return parts.length > 0 ? parts.join(', ') : null;
+    } catch (error) {
+      console.error('Error in detailed geocoding:', error);
+      return null;
     }
   },
   async getCurrentWeather(lat, lon, units = 'metric') {

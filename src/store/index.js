@@ -92,13 +92,13 @@ export default createStore({
       commit('SET_ERROR', null)
       try {
         const locationData = await weatherService.getReverseGeocoding(lat, lon)
-        
+        const detailedDisplay = await weatherService.getDetailedLocation(lat, lon)
+
         if (locationData) {
           const { name, country, state } = locationData
-          const locationDisplay = state 
-            ? `${name}, ${state}, ${country}` 
-            : `${name}, ${country}`
-            
+          const locationDisplay = detailedDisplay
+            || (state ? `${name}, ${state}, ${country}` : `${name}, ${country}`)
+
           commit('SET_SELECTED_LOCATION', {
             lat,
             lon,
