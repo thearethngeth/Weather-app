@@ -108,19 +108,25 @@ function generateMockResponse(query, weather, forecast) {
  * @param {Object} params.forecast - Vuex forecast state
  * @param {string} params.units - 'metric' or 'imperial'
  */
-export async function getWeatherAssistantReply({ userMessage, preferredLanguage, weather, forecast, units }) {
+export async function getWeatherAssistantReply({ userMessage, preferredLanguage, weather, forecast, units, conversationHistory = [] }) {
   const detectedLang = detectLanguage(userMessage);
   const finalLang = preferredLanguage || detectedLang;
-  
+
   // Step 1: Translate user message to English (if needed) for OpenAI
   let queryForAI = userMessage;
   if (finalLang === LanguageCode.KHMER) {
     queryForAI = await translateText(userMessage, 'km', 'en');
   }
-  
+
   // Step 2: Build system prompt with weather context
   const systemPrompt = buildSystemPrompt(weather, forecast, units);
-  
+
+  // Build history (last 10 messages to stay within token limits)
+  const historyMessages = conversationHistory.slice(-10).map(m => ({
+    role: m.sender === 'user' ? 'user' : 'assistant',
+    content: m.text
+  }));
+
   // Step 3: Call OpenAI
   let aiResponseEnglish = '';
   try {
@@ -133,6 +139,7 @@ export async function getWeatherAssistantReply({ userMessage, preferredLanguage,
         model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
+          ...historyMessages,
           { role: 'user', content: queryForAI }
         ],
         temperature: 0.7,

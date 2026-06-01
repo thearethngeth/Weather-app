@@ -135,7 +135,8 @@ export default {
             preferredLanguage: selectedLanguage.value,
             weather: weather.value,
             forecast: forecast.value,
-            units: units.value
+            units: units.value,
+            conversationHistory: messages.value
           });
           addMessage('ai', result.response);
         }
