@@ -80,9 +80,8 @@ export default {
       return h === 1 ? '1 hour ago' : `${h} hours ago`
     },
     isNightTime() {
-      if (!this.weatherData?.sys) return false
-      const now = Date.now() / 1000
-      return now < this.weatherData.sys.sunrise || now > this.weatherData.sys.sunset
+      const hour = new Date().getHours();
+      return hour < 6 || hour >= 18;
     }
   },
   watch: {

@@ -42,7 +42,9 @@ function getWeatherInfo(code, isDay = true) {
 // Convert Open-Meteo response → OpenWeatherMap-compatible current weather format
 export function mapCurrentWeather(data, locationName, country) {
   const c = data.current;
-  const isDay = c.is_day ?? 1;
+  // Use local hour to determine day/night (6AM-6PM = day)
+  const hour = new Date().getHours();
+  const isDay = (hour >= 6 && hour < 18) ? 1 : 0;
   const wInfo = getWeatherInfo(c.weather_code, isDay);
 
   return {
