@@ -1,25 +1,22 @@
 // src/services/weatherServices.js
 import axios from 'axios';
 
-// Check for the API key in different places
-const API_KEY = process.env.VUE_APP_WEATHER_API_KEY || "16d7ffb7b81c1a8b609196ddd5bc6470"; 
-console.log('Using Weather API Key:', API_KEY ? `${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}` : 'MISSING API KEY');
-
+const API_KEY = process.env.VUE_APP_WEATHER_API_KEY;
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
-const GEO_URL = 'https://api.openweathermap.org/geo/1.0'; // Changed to HTTPS
-const ONE_CALL_URL = 'https://api.openweathermap.org/data/2.5/onecall'; // Using 2.5 version which is more widely available
-const GOOGLE_MAPS_API_KEY = process.env.VUE_APP_GOOGLE_MAPS_API_KEY;
+const ONE_CALL_URL = 'https://api.openweathermap.org/data/2.5/onecall';
+
+// Route through backend in production, direct in local dev
+const isProd = process.env.NODE_ENV === 'production';
+const BACKEND_GEOCODING = '/.netlify/functions/geocoding';
+const BACKEND_AIRQUALITY = '/.netlify/functions/airquality';
+const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 export const weatherService = {  async getCoordinatesByCity(city) {
     try {
-      console.log('Fetching coordinates for city:', city);
-      const response = await axios.get(`${GEO_URL}/direct`, {
-        params: {
-          q: city,
-          limit: 1,
-          appid: API_KEY
-        }
-      });
+      const url = isProd
+        ? `${BACKEND_GEOCODING}?type=city&city=${encodeURIComponent(city)}`
+        : `${GEO_URL}/direct?q=${encodeURIComponent(city)}&limit=1&appid=${API_KEY}`;
+      const response = await axios.get(url);
       console.log('City coordinates response:', response.data);
       if (!response.data || response.data.length === 0) {
         console.error('No results found for city:', city);
@@ -33,15 +30,10 @@ export const weatherService = {  async getCoordinatesByCity(city) {
   },
   async getReverseGeocoding(lat, lon) {
     try {
-      console.log('Fetching reverse geocoding for:', lat, lon);
-      const response = await axios.get(`${GEO_URL}/reverse`, {
-        params: {
-          lat,
-          lon,
-          limit: 1,
-          appid: API_KEY
-        }
-      });
+      const url = isProd
+        ? `${BACKEND_GEOCODING}?lat=${lat}&lon=${lon}`
+        : `${GEO_URL}/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`;
+      const response = await axios.get(url);
       console.log('Reverse geocoding response:', response.data);
       
       if (!response.data || response.data.length === 0) {
@@ -67,8 +59,10 @@ export const weatherService = {  async getCoordinatesByCity(city) {
   },
   async getDetailedLocation(lat, lon) {
     try {
-      const response = await axios.get('https://nominatim.openstreetmap.org/reverse', {
-        params: { lat, lon, format: 'json', addressdetails: 1 },
+      const url = isProd
+        ? `${BACKEND_GEOCODING}?lat=${lat}&lon=${lon}&type=detailed`
+        : `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`;
+      const response = await axios.get(url, isProd ? {} : {
         headers: { 'Accept-Language': 'en', 'User-Agent': 'ClimaSense/1.0' }
       });
 
@@ -125,13 +119,10 @@ export const weatherService = {  async getCoordinatesByCity(city) {
 
   async getAirQuality(lat, lon) {
     try {
-      const response = await axios.get(`${BASE_URL}/air_pollution`, {
-        params: {
-          lat,
-          lon,
-          appid: API_KEY
-        }
-      });
+      const url = isProd
+        ? `${BACKEND_AIRQUALITY}?lat=${lat}&lon=${lon}`
+        : `${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+      const response = await axios.get(url);
       return response.data;
     } catch (error) {
       throw new Error('Failed to fetch air quality');

@@ -3,6 +3,8 @@ import { translateText, detectLanguage, LanguageCode, isHistoricalQuery } from '
 
 const OPENAI_API_KEY = process.env.VUE_APP_OPENAI_API_KEY;
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const isProd = process.env.NODE_ENV === 'production';
+const AI_BACKEND_URL = '/.netlify/functions/ai';
 
 /**
  * Build system prompt with current weather context
@@ -135,7 +137,7 @@ export async function getWeatherAssistantReply({ userMessage, preferredLanguage,
       console.warn('⚠️ OpenAI API key not configured. Using mock response for demonstration.');
       aiResponseEnglish = generateMockResponse(queryForAI, weather, forecast);
     } else {
-      const response = await axios.post(OPENAI_URL, {
+      const payload = {
         model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
@@ -144,12 +146,13 @@ export async function getWeatherAssistantReply({ userMessage, preferredLanguage,
         ],
         temperature: 0.7,
         max_tokens: 300
-      }, {
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      };
+
+      const response = isProd
+        ? await axios.post(AI_BACKEND_URL, payload)
+        : await axios.post(OPENAI_URL, payload, {
+            headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' }
+          });
       aiResponseEnglish = response.data.choices[0].message.content.trim();
     }
   } catch (error) {

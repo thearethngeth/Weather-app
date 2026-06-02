@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://api.open-meteo.com/v1/forecast';
+// Use backend function in production, direct API in local dev
+const BASE_URL = process.env.NODE_ENV === 'production'
+  ? '/.netlify/functions/weather'
+  : 'https://api.open-meteo.com/v1/forecast';
 
 // WMO weather code → { description, main, icon (OWM-compatible) }
 const WMO_CODES = {
