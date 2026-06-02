@@ -14,10 +14,15 @@ export default createStore({
     forecastLoading: false,
     lastUpdated: null,
     error: null,
-    units: 'metric', // Default to metric, can be 'imperial' or 'standard'
-    selectedLocation: null
+    units: 'metric',
+    selectedLocation: null,
+    language: localStorage.getItem('climasense_lang') || 'en'
   },
   mutations: {
+    SET_LANGUAGE(state, lang) {
+      state.language = lang;
+      localStorage.setItem('climasense_lang', lang);
+    },
     SET_WEATHER(state, weather) {
       state.weather = weather
     },

@@ -3,9 +3,9 @@
     <header class="search-header">
       <div class="search-header-inner">
         <div class="station-copy">
-          <span class="eyebrow">Weather station</span>
-          <h1>Home</h1>
-          <p>Minimal live weather dashboard for local decisions.</p>
+          <span class="eyebrow">{{ $t('weatherStation') }}</span>
+          <h1>{{ $t('home') }}</h1>
+          <p>{{ $t('homeSubtitle') }}</p>
         </div>
 
         <div class="search-tools">
@@ -26,6 +26,9 @@
               &deg;F
             </button>
           </div>
+          <button class="lang-toggle-btn" @click="toggleLanguage" :title="lang === 'en' ? 'Switch to Khmer' : 'ប្តូរទៅភាសាអង់គ្លេស'">
+            {{ lang === 'en' ? 'ខ្មែរ' : 'EN' }}
+          </button>
         </div>
       </div>
 
@@ -170,19 +173,19 @@
 
     <nav class="bottom-nav" aria-label="Weather dashboard navigation">
       <button :class="['bnav-btn', { active: activeTab === 'home' }]" @click="setTab('home')">
-        <i class="fas fa-house"></i><span>Home</span>
+        <i class="fas fa-house"></i><span>{{ $t('nav.home') }}</span>
       </button>
       <button :class="['bnav-btn', { active: activeTab === 'map' }]" @click="setTab('map')">
-        <i class="fas fa-map-location-dot"></i><span>Map</span>
+        <i class="fas fa-map-location-dot"></i><span>{{ $t('nav.map') }}</span>
       </button>
       <button :class="['bnav-btn', { active: activeTab === 'forecast' }]" @click="setTab('forecast')">
-        <i class="fas fa-calendar-days"></i><span>Forecast</span>
+        <i class="fas fa-calendar-days"></i><span>{{ $t('nav.forecast') }}</span>
       </button>
       <button :class="['bnav-btn', { active: activeTab === 'hourly' }]" @click="setTab('hourly')">
-        <i class="fas fa-clock"></i><span>Hourly</span>
+        <i class="fas fa-clock"></i><span>{{ $t('nav.hourly') }}</span>
       </button>
       <button :class="['bnav-btn', { active: activeTab === 'ai' }]" @click="setTab('ai')">
-        <i class="fas fa-robot"></i><span>AI</span>
+        <i class="fas fa-robot"></i><span>{{ $t('nav.ai') }}</span>
       </button>
     </nav>
 
@@ -263,6 +266,7 @@ import Visibility from "@/components/Visibility.vue";
 import WeatherStats from "@/components/WeatherStats.vue";
 import { onMounted, ref, computed } from "vue";
 import { useStore } from "vuex";
+import { useTranslation } from "@/i18n/useTranslation";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -286,6 +290,7 @@ export default {
   },
   setup() {
     const store = useStore();
+    const { lang, $t, toggleLanguage } = useTranslation();
     const showAlertsModal = ref(false);
     const showDetailModal = ref(false);
     const detailModalType = ref("");
@@ -432,6 +437,7 @@ export default {
     });
 
     return {
+      lang, $t, toggleLanguage,
       currentLocation,
       lastUpdated,
       isDarkTheme,
@@ -552,6 +558,24 @@ body.dark-theme .search-header {
   border: 1px solid var(--border);
   border-radius: 999px;
   box-shadow: var(--shadow-sm);
+}
+
+.lang-toggle-btn {
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--accent-dark, #24586d);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+  &:hover {
+    background: var(--accent-light);
+  }
 }
 
 .unit-btn {

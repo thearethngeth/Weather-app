@@ -8,7 +8,7 @@
           <input
             type="text"
             class="ws-input"
-            placeholder="Search for a city..."
+            :placeholder="$t('searchPlaceholder')"
             v-model="cityInput"
             @keyup.enter="searchCity"
             @focus="showSuggestions = true"
@@ -37,15 +37,15 @@
           </div>
         </div>
         <button class="ws-btn ws-btn-primary" @click="searchCity" :disabled="loading">
-          <i class="fas fa-search"></i> Search
+          <i class="fas fa-search"></i> {{ $t('search') }}
         </button>
         <button class="ws-btn ws-btn-secondary" @click="getCurrentLocation" :disabled="loading">
-          <i class="fas fa-crosshairs"></i> Current Location
+          <i class="fas fa-crosshairs"></i> {{ $t('currentLocation') }}
         </button>
       </div>
 
       <div class="ws-popular">
-        <span class="ws-pop-label">Popular:</span>
+        <span class="ws-pop-label">{{ $t('popular') }}</span>
         <button v-for="city in popularCities" :key="city.name" @click="quickSearch(city)" class="ws-chip">
           {{ city.name }}
         </button>
@@ -84,6 +84,11 @@ export default {
   },
 
   computed: {
+    lang() { return this.$store.state.language; },
+    $t() {
+      const { t } = require('@/i18n/translations');
+      return (key) => t(this.lang, key);
+    },
     loading() {
       return this.$store.state.loading;
     },

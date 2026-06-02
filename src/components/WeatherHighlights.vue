@@ -17,30 +17,30 @@
         <article class="condition-card">
           <div class="condition-head">
             <i class="fas fa-eye"></i>
-            <span>Visibility</span>
+            <span>{{ $t('visibilityLabel') }}</span>
           </div>
           <strong>{{ visibilityLabel }}</strong>
           <div class="meter">
             <span :style="{ width: `${visibilityPercent}%` }"></span>
           </div>
           <div class="meter-labels">
-            <span>Poor</span>
-            <span>Clear</span>
+            <span>{{ $t('poor') }}</span>
+            <span>{{ $t('clear') }}</span>
           </div>
         </article>
 
         <article class="condition-card">
           <div class="condition-head">
             <i class="fas fa-sun"></i>
-            <span>UV Index</span>
+            <span>{{ $t('uvIndexLabel') }}</span>
           </div>
           <strong>{{ uvLabel }}</strong>
           <div class="meter uv-meter">
             <span :style="{ width: `${uvPercent}%` }"></span>
           </div>
           <div class="meter-labels">
-            <span>Low</span>
-            <span>High</span>
+            <span>{{ $t('low') }}</span>
+            <span>{{ $t('high') }}</span>
           </div>
         </article>
       </div>
@@ -57,6 +57,11 @@
 export default {
   name: "WeatherHighlights",
   computed: {
+    lang() { return this.$store.state.language; },
+    $t() {
+      const { t } = require('@/i18n/translations');
+      return (key) => t(this.lang, key);
+    },
     weather() {
       return this.$store.state.weather;
     },
@@ -67,36 +72,12 @@ export default {
       if (!this.weather) return [];
       const degree = String.fromCharCode(176);
       return [
-        {
-          title: "Humidity",
-          value: `${this.weather.main.humidity}%`,
-          icon: "fas fa-droplet",
-        },
-        {
-          title: "Pressure",
-          value: `${this.weather.main.pressure} hPa`,
-          icon: "fas fa-gauge-high",
-        },
-        {
-          title: "Wind",
-          value: `${Number(this.weather.wind.speed || 0).toFixed(1)} m/s`,
-          icon: "fas fa-wind",
-        },
-        {
-          title: "Feels Like",
-          value: `${Math.round(this.weather.main.feels_like)}${degree}C`,
-          icon: "fas fa-temperature-high",
-        },
-        {
-          title: "Cloud Cover",
-          value: `${this.weather.clouds?.all ?? 0}%`,
-          icon: "fas fa-cloud",
-        },
-        {
-          title: "Condition",
-          value: this.weather.weather?.[0]?.main || "N/A",
-          icon: "fas fa-cloud-sun",
-        },
+        { title: this.$t('humidity'),   value: `${this.weather.main.humidity}%`,                            icon: "fas fa-droplet" },
+        { title: this.$t('pressure'),   value: `${this.weather.main.pressure} hPa`,                         icon: "fas fa-gauge-high" },
+        { title: this.$t('wind'),       value: `${Number(this.weather.wind.speed || 0).toFixed(1)} m/s`,    icon: "fas fa-wind" },
+        { title: this.$t('feelsLike'),  value: `${Math.round(this.weather.main.feels_like)}${degree}C`,     icon: "fas fa-temperature-high" },
+        { title: this.$t('cloudCover'), value: `${this.weather.clouds?.all ?? 0}%`,                         icon: "fas fa-cloud" },
+        { title: this.$t('condition'),  value: this.weather.weather?.[0]?.main || "N/A",                    icon: "fas fa-cloud-sun" },
       ];
     },
     visibilityKm() {
